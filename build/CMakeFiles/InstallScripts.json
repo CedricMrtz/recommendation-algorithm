@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/cedric/Downloads/recommendation-algorithm/build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
