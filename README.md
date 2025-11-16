@@ -1,13 +1,15 @@
 # recommendation-algorithm
 
-# Build Instructions
+## Build Instructions
 
-## Requirements
-- CMake 3.10+
-- C++17 compiler:
-  - Linux: g++, clang++
-  - Windows: MinGW-w64 (MSYS2) or Visual Studio Build Tools
-  - macOS: Xcode Command Line Tools
+### Requirements
+- CMake 3.16+
+- C++17 compiler
+  - **Windows:** Qt 6.x + MinGW (installed in `C:/Qt/6.x.x/mingw_64`)
+  - **Linux:** Qt6 development packages (`qt6-base-dev`)
+  - **macOS:** Qt 6.x via Homebrew (`brew install qt`)
+
+---
 
 ## Build
 ```bash
@@ -17,3 +19,8 @@ mkdir build
 cd build
 cmake ..
 cmake --build .
+```
+---
+## Run
+./front        # Linux / macOS
+./front.exe    # Windows
