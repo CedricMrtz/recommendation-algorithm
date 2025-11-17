@@ -2,17 +2,18 @@
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QFrame>
+
 ShowCard::ShowCard(const Show &show, QWidget *parent) : QWidget(parent) {
     this->setProperty("class", "ShowCard");
 
     setStyleSheet(R"(
-        ShowCard {
+        *[class="ShowCard"] {
             background: #1e1e1e;
             border-radius: 10px;
             padding: 14px;
-            border: 1px solid #3a3a3a;
+            border: 1px solid #ffffffff;
         }
-        ShowCard QLabel {
+        *[class="ShowCard"] QLabel {
             color: #eeeeee;
             font-weight:bold;
             font-size: 14px;

@@ -1,7 +1,6 @@
 #pragma once
 #include <QWidget>
-#include "showCard.h"
-#include "../utils/show.h"
+#include "show.h"
 class ShowCard : public QWidget {
     Q_OBJECT
 public:

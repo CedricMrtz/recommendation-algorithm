@@ -5,9 +5,9 @@
 #include <QVBoxLayout>
 #include <QScrollArea>
 #include <QGridLayout>
-#include "./components/navbar.h"
-#include "components/showCard.h"
-#include "utils/csvutils.h"
+#include "navbar.h"
+#include "showCard.h"
+#include "csvutils.h"
 
 int main(int argc, char *argv[])
 {

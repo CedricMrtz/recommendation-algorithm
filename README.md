@@ -18,7 +18,7 @@ cd recommendation-algorithm
 mkdir build
 cd build
 cmake ..
-cmake --build .
+cmake --build . --target deploy
 ```
 ---
 ## Run

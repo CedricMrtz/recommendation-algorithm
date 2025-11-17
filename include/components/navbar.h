@@ -7,5 +7,5 @@
 class navBar : public QWidget {
     Q_OBJECT
 public:
-    navBar(QWidget *parent = nullptr);
+    explicit navBar(QWidget *parent = nullptr);
 };

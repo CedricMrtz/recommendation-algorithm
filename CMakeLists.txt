@@ -12,12 +12,24 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+include_directories(
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/components
+    ${CMAKE_SOURCE_DIR}/include/utils
+)
+
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 file(GLOB_RECURSE SOURCES
     "src/*.cpp"
     "src/front/*.cpp"
     "src/front/components/*.cpp"
+    "src/front/utils/*.cpp"
+)
+
+file(GLOB_RECURSE HEADERS
+    "include/*.h"
+    "include/**/*.h"
 )
 
 set(RESOURCES src/resources.qrc)
@@ -26,6 +38,7 @@ qt6_add_resources(QRC_SOURCES ${RESOURCES})
 
 add_executable(front
     ${SOURCES}
+    ${HEADERS}
     ${QRC_SOURCES}
 )
 
