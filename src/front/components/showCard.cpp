@@ -40,3 +40,4 @@ ShowCard::ShowCard(const Show &show, QWidget *parent) : QWidget(parent) {
 
     layout->addWidget(content);
 }
+
