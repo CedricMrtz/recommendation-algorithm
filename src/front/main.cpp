@@ -8,6 +8,7 @@
 #include "navbar.h"
 #include "showCard.h"
 #include "csvutils.h"
+#include "userManager.h"
 
 int main(int argc, char *argv[])
 {
@@ -16,7 +17,8 @@ int main(int argc, char *argv[])
     window.setWindowTitle("Recommend");
     QVBoxLayout *layout = new QVBoxLayout(&window);
 
-    navBar *navbar = new navBar();
+    UserManager manager;
+    navBar *navbar = new navBar(&manager);
     layout->addWidget(navbar);
 
     QScrollArea *scroll = new QScrollArea(&window);
@@ -28,7 +30,7 @@ int main(int argc, char *argv[])
     grid->setAlignment(Qt::AlignTop);
     scroll->setWidget(container);
     layout->addWidget(scroll);
-    QVector<Show> shows = readShowsFromCsv("src/front/data/anime.csv");
+    QVector<Show> shows = readShowsFromCsv(":front/data/anime.csv");
 
     int row = 0;
     int col = 0;

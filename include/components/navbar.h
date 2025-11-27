@@ -3,9 +3,13 @@
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QPushButton>
+#include "userManager.h"
 
 class navBar : public QWidget {
     Q_OBJECT
 public:
-    explicit navBar(QWidget *parent = nullptr);
+    explicit navBar(UserManager* manager, QWidget *parent = nullptr);
+
+private:
+    UserManager* userManager;
 };
