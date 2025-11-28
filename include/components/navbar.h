@@ -1,15 +1,18 @@
 #pragma once
 #include <QWidget>
-#include <QLabel>
-#include <QVBoxLayout>
+#include <QHBoxLayout>
 #include <QPushButton>
 #include "userManager.h"
+#include "ratingutils.h" 
 
 class navBar : public QWidget {
     Q_OBJECT
 public:
-    explicit navBar(UserManager* manager, QWidget *parent = nullptr);
+    explicit navBar(UserManager *manager,
+                    KaggleRatings *kaggleRatings,
+                    QWidget *parent = nullptr);
 
 private:
-    UserManager* userManager;
+    UserManager *userManager;
+    KaggleRatings *kaggleRatings;
 };

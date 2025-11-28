@@ -9,16 +9,20 @@
 #include "showCard.h"
 #include "csvutils.h"
 #include "userManager.h"
+#include "ratingutils.h"
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
+    KaggleRatings kaggleRatings;
+    loadKaggleRatingsWithCache(":/front/data/rating.csv", "ratings.bin", kaggleRatings);
+
     QWidget window;
     window.setWindowTitle("Recommend");
     QVBoxLayout *layout = new QVBoxLayout(&window);
 
     UserManager manager;
-    navBar *navbar = new navBar(&manager);
+    navBar *navbar = new navBar(&manager, &kaggleRatings);
     layout->addWidget(navbar);
 
     QScrollArea *scroll = new QScrollArea(&window);
@@ -30,7 +34,8 @@ int main(int argc, char *argv[])
     grid->setAlignment(Qt::AlignTop);
     scroll->setWidget(container);
     layout->addWidget(scroll);
-    QVector<Show> shows = readShowsFromCsv(":front/data/anime.csv");
+
+    QVector<Show> shows = readShowsWithCache(":/front/data/anime.csv", "anime.bin");
 
     int row = 0;
     int col = 0;

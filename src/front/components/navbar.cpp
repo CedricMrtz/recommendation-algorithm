@@ -1,93 +1,103 @@
-    #include "navbar.h"
-    #include "csvutils.h"
-    #include <QVector>
-    #include <QStringList>
-    #include <QInputDialog>
-    #include <QMessageBox>
+#include "navbar.h"
+#include "csvutils.h"
+#include <QVector>
+#include <QStringList>
+#include <QInputDialog>
+#include <QMessageBox>
+#include <QMap>
 
+navBar::navBar(UserManager *manager, KaggleRatings *ratings, QWidget *parent) : QWidget(parent),
+      userManager(manager),
+      kaggleRatings(ratings)
+{
+    auto *layout = new QHBoxLayout(this);
 
-    navBar::navBar(UserManager *manager, QWidget *parent)
-        : QWidget(parent), userManager(manager) 
-    {
-        auto *layout = new QHBoxLayout(this);
+    auto *addButton = new QPushButton(this);
+    addButton->setIcon(QIcon(":/front/public/add.svg"));
 
-        auto *addButton = new QPushButton(this);
-        addButton->setIcon(QIcon(":/front/public/add.svg"));
+    auto *profileButton = new QPushButton(this);
+    profileButton->setIcon(QIcon(":/front/public/profile.svg"));
 
-        auto *profileButton = new QPushButton(this);
-        profileButton->setIcon(QIcon(":/front/public/profile.svg"));
+    auto *searchButton = new QPushButton(this);
+    searchButton->setIcon(QIcon(":/front/public/search.svg"));
 
-        auto *searchButton = new QPushButton(this);
-        searchButton->setIcon(QIcon(":/front/public/search.svg"));
+    auto *rateButton = new QPushButton(this);
+    rateButton->setIcon(QIcon(":/front/public/rating.svg"));
 
-        auto *rateButton = new QPushButton(this);
-        rateButton->setIcon(QIcon(":/front/public/rating.svg"));
+    layout->addWidget(addButton);
+    layout->addWidget(profileButton);
+    layout->addWidget(searchButton);
+    layout->addWidget(rateButton);
 
-        layout->addWidget(addButton);
-        layout->addWidget(profileButton);
-        layout->addWidget(searchButton);
-        layout->addWidget(rateButton);
+    setLayout(layout);
 
-        setLayout(layout);
+    connect(profileButton, &QPushButton::clicked, this, [=]() {
+        QString name = QInputDialog::getText(this, "Registrar usuario", "Nombre del usuario:");
 
-        connect(profileButton, &QPushButton::clicked, this, [=]() {
-            QString name = QInputDialog::getText(this, "Registrar usuario",
-                                                "Nombre del usuario:");
+        if (name.isEmpty()) return;
+        if (!userManager->registerUser(name)) {
+            QMessageBox::warning(this, "Error", "Ese nombre ya existe.");
+        } else {
+            QMessageBox::information(this, "OK", "Usuario registrado.");
+        }
+    });
 
-            if (name.isEmpty()) return;
+    connect(rateButton, &QPushButton::clicked, this, [=]() {
+        if (userManager->users.isEmpty()) {
+            QMessageBox::warning(this, "Error", "Primero registra un usuario.");
+            return;
+        }
 
-            if (!userManager->registerUser(name)) {
-                QMessageBox::warning(this, "Error",
-                                    "Ese nombre ya existe.");
-            } else {
-                QMessageBox::information(this, "OK",
-                                        "Usuario registrado.");
-            }
-        });
+        QStringList userNames = userManager->users.keys();
+        QString user = QInputDialog::getItem(this, "Usuario", "Selecciona usuario:", userNames, 0, false);
+        if (user.isEmpty()) return;
 
-        connect(rateButton, &QPushButton::clicked, this, [=]() {
-            if (userManager->users.isEmpty()) {
-                QMessageBox::warning(this, "Error",
-                                    "Primero registra un usuario.");
-                return;
-            }
+        QVector<Show> shows = readShowsWithCache(":/front/data/anime.csv", "anime.bin");
 
-            QStringList userNames = userManager->users.keys();
-            QString user = QInputDialog::getItem(this, "Usuario",
-                                                "Selecciona usuario:",
-                                                userNames, 0, false);
-            if (user.isEmpty()) return;
+        QStringList movieNames;
+        QHash<QString, int> movieToId;
+        for (const auto &s : shows) {
+            movieNames << s.name;
+            movieToId[s.name] = s.anime_id;
+        }
 
-            QVector<Show> shows = readShowsFromCsv(":/front/data/anime.csv");
-            QStringList movieNames;
-            for (auto &s : shows) movieNames << s.name;
+        QString movie = QInputDialog::getItem(this, "Película", "Selecciona película:", movieNames, 0, false);
+        if (movie.isEmpty()) return;
 
-            QString movie = QInputDialog::getItem(this, "Película",
-                                                "Selecciona película:",
-                                                movieNames, 0, false);
-            if (movie.isEmpty()) return;
+        int animeId = movieToId.value(movie, -1);
 
-            double total = 0;
-            int count = 0;
-
-            for (auto &u : userManager->users) {
-                if (u.ratings.contains(movie)) {
-                    total += u.ratings[movie];
-                    count++;
+        double kaggleSum = 0.0;
+        int kaggleCount = 0;
+        if (kaggleRatings && animeId != -1) {
+            for (auto it = kaggleRatings->cbegin(); it != kaggleRatings->cend(); ++it) {
+                const auto &userMap = it.value();
+                auto it2 = userMap.find(animeId);
+                if (it2 != userMap.end()) {
+                    kaggleSum += it2.value();
+                    ++kaggleCount;
                 }
             }
+        }
+        double localSum = 0.0;
+        int localCount = 0;
+        for (auto it = userManager->users.cbegin(); it != userManager->users.cend(); ++it) {
+            const User &u = it.value();
+            auto it2 = u.ratings.find(movie);
+            if (it2 != u.ratings.end()) {
+                localSum += it2.value();
+                ++localCount;
+            }
+        }
 
-            double avg = count ? total / count : 0;
+        int rating = QInputDialog::getInt(this, "Calificar", "Tu calificación (1–10):", 5, 1, 10);
+        double totalSum = kaggleSum + localSum + rating;
+        int totalCount = kaggleCount + localCount + 1;
+        double avg = totalCount ? (totalSum / totalCount) : 0.0;
 
-            QMessageBox::information(this, "Promedio",
-                                    "Promedio actual: " + QString::number(avg));
+        QMessageBox::information(this, "Promedio", "Promedio actual (incluyendo tu calificación): " + QString::number(avg));
 
-            int rating = QInputDialog::getInt(this, "Calificar",
-                                            "Tu calificación (1–10):",
-                                            5, 1, 10);
+        userManager->rateMovie(user, movie, rating);
 
-            userManager->rateMovie(user, movie, rating);
-
-            QMessageBox::information(this, "OK", "Calificación guardada.");
-        });
-    }
+        QMessageBox::information(this, "OK", "Calificación guardada.");
+    });
+}
