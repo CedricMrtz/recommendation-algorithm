@@ -2,6 +2,7 @@
 #include <QWidget>
 #include <QVector>
 #include "show.h"
+#include <QGridLayout>
 
 class recommendShow : public QWidget {
     Q_OBJECT
@@ -11,5 +12,5 @@ public:
     void setRecommendations(const QVector<Show> &recs);
 
 private:
-    // GUI
+    QGridLayout *grid;
 };

@@ -8,14 +8,18 @@ ShowCard::ShowCard(const Show &show, QWidget *parent) : QWidget(parent) {
 
     setStyleSheet(R"(
         *[class="ShowCard"] {
-            background: #1e1e1e;
-            border-radius: 10px;
-            padding: 14px;
-            border: 1px solid #ffffffff;
+        background: #1e1e1e;
+        border-radius: 12px;
+        padding: 14px;
+        border: 2px solid #333;
+        }
+        *[class="ShowCard"]:hover {
+            border: 2px solid #4a90e2;
+            background: #252525;
         }
         *[class="ShowCard"] QLabel {
-            color: #eeeeee;
-            font-weight:bold;
+            color: #eeeeeeff;
+            font-weight: bold;
             font-size: 14px;
         }
     )");

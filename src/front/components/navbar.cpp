@@ -10,6 +10,8 @@ navBar::navBar(UserManager *manager, KaggleRatings *ratings, QWidget *parent) : 
       userManager(manager),
       kaggleRatings(ratings)
 {
+    setStyleSheet("background-color: #de2c2cff;");
+
     auto *layout = new QHBoxLayout(this);
 
     auto *profileButton = new QPushButton(this);
@@ -29,6 +31,8 @@ navBar::navBar(UserManager *manager, KaggleRatings *ratings, QWidget *parent) : 
 
     connect(recommendButton, &QPushButton::clicked, this, [=]() {
         auto *screen = new recommendShow();
+        QVector<Show> allShows = readShowsWithCache(":/front/data/anime.csv", "anime.bin");
+        screen->setRecommendations(allShows);
         screen->show();
     });
 
