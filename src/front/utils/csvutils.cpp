@@ -69,7 +69,7 @@ static bool saveShowsToBinary(const QString &binPath, const QVector<Show> &shows
     }
 
     QDataStream out(&file);
-    out.setVersion(QDataStream::Qt_6_10); 
+    out.setVersion(QDataStream::Qt_6_9); 
 
     qint32 count = shows.size();
     out << count;
@@ -96,7 +96,7 @@ static QVector<Show> readShowsFromBinary(const QString &binPath) {
     }
 
     QDataStream in(&file);
-    in.setVersion(QDataStream::Qt_6_5);
+    in.setVersion(QDataStream::Qt_6_9);
 
     qint32 count = 0;
     in >> count;

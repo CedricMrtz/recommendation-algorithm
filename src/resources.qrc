@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>front/public/add.svg</file>
         <file>front/public/profile.svg</file>
         <file>front/public/search.svg</file>
         <file>front/public/rating.svg</file>

@@ -4,6 +4,8 @@
 #include <QPushButton>
 #include "userManager.h"
 #include "ratingutils.h" 
+#include "recommendation.h"
+#include "recommendShow.h"
 
 class navBar : public QWidget {
     Q_OBJECT
