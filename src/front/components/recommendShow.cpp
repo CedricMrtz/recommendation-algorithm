@@ -15,10 +15,11 @@ recommendShow::recommendShow(QWidget *parent) : QWidget(parent) {
     layout->addWidget(scroll);
 }
 
-void recommendShow::setRecommendations(const QVector<Show> &recs) {
+void recommendShow::setRecommendations(const QVector<Show> &recs, const QSet<QString> &ratedMovies) {
     // display
     int row = 0, col = 0;
     for (const Show &s : recs) {
+        if (ratedMovies.contains(s.name)) continue; // skip rated shows
         ShowCard *card = new ShowCard(s);
         grid->addWidget(card, row, col);
         col++;

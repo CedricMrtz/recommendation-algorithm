@@ -30,9 +30,20 @@ navBar::navBar(UserManager *manager, KaggleRatings *ratings, QWidget *parent) : 
     setLayout(layout);
 
     connect(recommendButton, &QPushButton::clicked, this, [=]() {
-        auto *screen = new recommendShow();
+        if (userManager->users.isEmpty()) {
+            QMessageBox::warning(this, "Error", "Primero registra un usuario.");
+            return;
+        }
+
+        QStringList userNames = userManager->users.keys();
+        QString currentUser = QInputDialog::getItem(this, "Usuario", "Selecciona usuario:", userNames, 0, false);
+        if (currentUser.isEmpty()) return;
+
         QVector<Show> allShows = readShowsWithCache(":/front/data/anime.csv", "anime.bin");
-        screen->setRecommendations(allShows);
+
+        auto *screen = new recommendShow();
+        QSet<QString> ratedMovies = userManager->ratedMovies(currentUser);
+        screen->setRecommendations(allShows, ratedMovies);
         screen->show();
     });
 
