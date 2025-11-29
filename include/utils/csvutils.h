@@ -2,7 +2,6 @@
 #include <QVector>
 #include <QString>
 #include "show.h"
+#include <QHash>
 
-QVector<Show> readShowsFromCsv(const QString &path);
-
-QVector<Show> readShowsWithCache(const QString &csvPath, const QString &binPath = "anime.bin");
+QHash<QString, Show> readShowsFromCsv(const QString &path);

@@ -5,6 +5,8 @@
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QMap>
+#include <QHash>
+#include <QString>
 
 navBar::navBar(UserManager *manager, KaggleRatings *ratings, QWidget *parent) : QWidget(parent),
       userManager(manager),
@@ -39,12 +41,14 @@ navBar::navBar(UserManager *manager, KaggleRatings *ratings, QWidget *parent) : 
         QString currentUser = QInputDialog::getItem(this, "Usuario", "Selecciona usuario:", userNames, 0, false);
         if (currentUser.isEmpty()) return;
 
-        QVector<Show> allShows = readShowsWithCache(":/front/data/anime.csv", "anime.bin");
+        QHash<QString, Show> allShows = readShowsFromCsv(":/front/data/anime.csv");
 
         auto *screen = new recommendShow();
         QSet<QString> ratedMovies = userManager->ratedMovies(currentUser);
-        screen->sortRecommendations(allShows);
-        screen->setRecommendations(allShows, ratedMovies);
+        QVector<Show> allShowsVec = allShows.values().toVector();
+
+        screen->sortRecommendations(allShowsVec);
+        screen->setRecommendations(allShowsVec, ratedMovies);
         screen->show();
     });
 
@@ -69,13 +73,13 @@ navBar::navBar(UserManager *manager, KaggleRatings *ratings, QWidget *parent) : 
         QString user = QInputDialog::getItem(this, "Usuario", "Selecciona usuario:", userNames, 0, false);
         if (user.isEmpty()) return;
 
-        QVector<Show> shows = readShowsWithCache(":/front/data/anime.csv", "anime.bin");
+        QHash<QString, Show> shows = readShowsFromCsv(":/front/data/anime.csv");
 
         QStringList movieNames;
         QHash<QString, int> movieToId;
         for (const auto &s : shows) {
             movieNames << s.name;
-            movieToId[s.name] = s.anime_id;
+            movieToId.insert(s.name, s.anime_id);
         }
 
         QString movie = QInputDialog::getItem(this, "Película", "Selecciona película:", movieNames, 0, false);

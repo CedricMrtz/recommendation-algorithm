@@ -4,6 +4,8 @@
 #include <QDebug>
 #include <QDataStream>
 #include <QFileInfo>
+#include <QHash>
+#include <QString>
 
 static QStringList splitCsvLine(const QString &line) {
     QStringList fields;
@@ -24,13 +26,13 @@ static QStringList splitCsvLine(const QString &line) {
     return fields;
 }
 
-QVector<Show> readShowsFromCsv(const QString &path) {
-    QVector<Show> shows;
+QHash<QString, Show> readShowsFromCsv(const QString &path) {
+    QHash<QString, Show> shows;
 
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
         qWarning() << "Failed to open file:" << path << "-" << file.errorString();
-        return {};
+        return shows;
     }
 
     QTextStream in(&file);
@@ -55,92 +57,8 @@ QVector<Show> readShowsFromCsv(const QString &path) {
         s.rating   = f[5].toDouble();
         s.members  = f[6].toInt();
 
-        shows.append(s);
+        shows.insert(s.name, s);
     }
 
 return shows;
 }
-
-static bool saveShowsToBinary(const QString &binPath, const QVector<Show> &shows) {
-    QFile file(binPath);
-    if (!file.open(QIODevice::WriteOnly)) {
-        qWarning() << "Failed to open bin for write:" << binPath << "-" << file.errorString();
-        return false;
-    }
-
-    QDataStream out(&file);
-    out.setVersion(QDataStream::Qt_6_9); 
-
-    qint32 count = shows.size();
-    out << count;
-    for (const Show &s : shows) {
-        out << s.anime_id
-            << s.name
-            << s.genre
-            << s.type
-            << s.episodes
-            << s.rating
-            << s.members;
-    }
-
-    return true;
-}
-
-static QVector<Show> readShowsFromBinary(const QString &binPath) {
-    QVector<Show> shows;
-
-    QFile file(binPath);
-    if (!file.open(QIODevice::ReadOnly)) {
-        qWarning() << "Failed to open bin for read:" << binPath << "-" << file.errorString();
-        return {};
-    }
-
-    QDataStream in(&file);
-    in.setVersion(QDataStream::Qt_6_9);
-
-    qint32 count = 0;
-    in >> count;
-    if (count < 0) {
-        qWarning() << "Invalid count in bin";
-        return {};
-    }
-
-    shows.reserve(count);
-    for (qint32 i = 0; i < count; ++i) {
-        Show s;
-        in >> s.anime_id
-           >> s.name
-           >> s.genre
-           >> s.type
-           >> s.episodes
-           >> s.rating
-           >> s.members;
-        shows.append(s);
-    }
-
-    return shows;
-}
-
-
-QVector<Show> readShowsWithCache(const QString &csvPath, const QString &binPath) {
-    QFileInfo binInfo(binPath);
-
-    if (binInfo.exists() && binInfo.size() > 0) {
-        qDebug() << "abriendo bin (anime):" << binPath;
-        return readShowsFromBinary(binPath);
-    }
-
-    qDebug() << "leyendo csv para crear bin:" << csvPath;
-    QVector<Show> shows = readShowsFromCsv(csvPath);
-
-    if (!shows.isEmpty()) {
-        if (saveShowsToBinary(binPath, shows)) {
-            qDebug() << "Bin created at:" << binPath;
-        } else {
-            qWarning() << "Failed to create bin";
-        }
-    }
-
-    return shows;
-}
-

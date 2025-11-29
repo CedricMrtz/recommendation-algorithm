@@ -10,6 +10,8 @@
 #include "csvutils.h"
 #include "userManager.h"
 #include "ratingutils.h"
+#include <QHash>
+#include <QString>
 
 int main(int argc, char *argv[])
 {
@@ -35,12 +37,12 @@ int main(int argc, char *argv[])
     scroll->setWidget(container);
     layout->addWidget(scroll);
 
-    QVector<Show> shows = readShowsWithCache(":/front/data/anime.csv", "anime.bin");
-
+    QHash<QString, Show> shows = readShowsFromCsv(":/front/data/anime.csv");
+    QVector<Show> showsVec = shows.values();
     int row = 0;
     int col = 0;
-    for (int i = 0; i < shows.size(); ++i) {
-        ShowCard *card = new ShowCard(shows[i]);
+    for (int i = 0; i < showsVec.size(); ++i) {
+        ShowCard *card = new ShowCard(showsVec[i]);
         grid->addWidget(card, row, col);
         col++;
         if (col == 3) {
