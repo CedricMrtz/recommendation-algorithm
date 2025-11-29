@@ -10,6 +10,7 @@
 #include "csvutils.h"
 #include "userManager.h"
 #include "ratingutils.h"
+#include "recommendShow.h"
 #include <QHash>
 #include <QString>
 
@@ -41,6 +42,7 @@ int main(int argc, char *argv[])
     QVector<Show> showsVec = shows.values();
     int row = 0;
     int col = 0;
+    recommendShow::sortRecommendations(showsVec);
     for (int i = 0; i < showsVec.size(); ++i) {
         ShowCard *card = new ShowCard(showsVec[i]);
         grid->addWidget(card, row, col);

@@ -47,7 +47,6 @@ navBar::navBar(UserManager *manager, KaggleRatings *ratings, QWidget *parent) : 
         QSet<QString> ratedMovies = userManager->ratedMovies(currentUser);
         QVector<Show> allShowsVec = allShows.values().toVector();
 
-        screen->sortRecommendations(allShowsVec);
         screen->setRecommendations(allShowsVec, ratedMovies);
         screen->show();
     });

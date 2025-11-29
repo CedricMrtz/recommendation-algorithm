@@ -11,7 +11,7 @@ class recommendShow : public QWidget {
 public:
     explicit recommendShow(QWidget *parent = nullptr);
 
-    void sortRecommendations(QVector<Show> &recs);
+    static void sortRecommendations(QVector<Show> &recs);
 
     void setRecommendations(const QVector<Show> &recs, const QSet<QString> &ratedMovies);
 
