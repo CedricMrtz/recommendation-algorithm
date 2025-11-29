@@ -1,5 +1,6 @@
 #include "navbar.h"
 #include "csvutils.h"
+#include "crudutils.h"
 #include <QVector>
 #include <QStringList>
 #include <QInputDialog>
@@ -25,10 +26,13 @@ navBar::navBar(UserManager *manager, KaggleRatings *ratings, QWidget *parent) : 
     auto *rateButton = new QPushButton(this);
     rateButton->setIcon(QIcon(":/front/public/rating.svg"));
 
+    auto *crudButton = new QPushButton(this);
+    crudButton->setIcon(QIcon(":/front/public/edit.svg"));
+
     layout->addWidget(profileButton);
     layout->addWidget(recommendButton);
     layout->addWidget(rateButton);
-
+    layout->addWidget(crudButton);
     setLayout(layout);
 
     connect(recommendButton, &QPushButton::clicked, this, [=]() {
@@ -119,5 +123,24 @@ navBar::navBar(UserManager *manager, KaggleRatings *ratings, QWidget *parent) : 
         userManager->rateMovie(user, movie, rating);
 
         QMessageBox::information(this, "OK", "Calificación guardada.");
+    });
+
+    connect(crudButton, &QPushButton::clicked, this, [=]() {
+        if (userManager->users.isEmpty()) {
+            QMessageBox::warning(this, "Error", "Primero registra un usuario.");
+            return;
+        }
+
+        QStringList userNames = userManager->users.keys();
+        QString currentUser = QInputDialog::getItem(this, "Usuario", "Selecciona usuario:", userNames, 0, false);
+        if (currentUser.isEmpty()) return;
+
+        QHash<QString, Show> allShows = readShowsFromCsv(":/front/data/anime.csv");
+
+        auto *screen = new crudUtils(this);
+
+        QSet<QString> ratedMovies = userManager->ratedMovies(currentUser);
+
+        screen->exec();
     });
 }
