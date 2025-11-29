@@ -6,7 +6,5 @@
         <file>front/public/rating.svg</file>
         <file>front/data/anime.csv</file>
         <file>front/data/rating.csv</file>
-        <file>front/data/users.csv</file>
-        <file>front/data/user_ratings.csv</file>
     </qresource>
 </RCC>
