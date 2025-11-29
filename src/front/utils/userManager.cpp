@@ -105,3 +105,12 @@ void UserManager::rewriteUserRatingsFile() {
         }
     }
 }
+
+QHash<QString, int> UserManager::getUserRatings(const QString& user) const
+{
+    auto it = users.find(user);
+    if (it == users.end()) {
+        return {};
+    }
+    return it.value().ratings;
+}

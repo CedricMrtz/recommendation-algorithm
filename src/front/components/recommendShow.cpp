@@ -16,7 +16,6 @@ recommendShow::recommendShow(QWidget *parent) : QWidget(parent) {
 }
 
 void recommendShow::setRecommendations(const QVector<Show> &recs) {
-    // display
     int row = 0, col = 0;
     for (const Show &s : recs) {
         ShowCard *card = new ShowCard(s);

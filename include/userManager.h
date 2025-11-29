@@ -5,12 +5,13 @@
 
 class UserManager {
 public:
-    QHash<QString, User> users;
-
     UserManager();
 
     bool registerUser(const QString& name);
     bool rateMovie(const QString& user, const QString& movie, int rating);
+
+    QHash<QString, int> getUserRatings(const QString& user) const;
+    QHash<QString, User> users;
 
 private:
     void loadUsers();

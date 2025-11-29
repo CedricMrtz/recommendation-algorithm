@@ -4,7 +4,7 @@
 #include <QPushButton>
 #include "userManager.h"
 #include "ratingutils.h" 
-#include "recommendation.h"
+#include "RecommendationEngine.h"
 #include "recommendShow.h"
 
 class navBar : public QWidget {
@@ -13,8 +13,10 @@ public:
     explicit navBar(UserManager *manager,
                     KaggleRatings *kaggleRatings,
                     QWidget *parent = nullptr);
-
-private:
     UserManager *userManager;
     KaggleRatings *kaggleRatings;
+
+signals:
+    void refreshRecommendationsRequested(const QString &userName);
+
 };

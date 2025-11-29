@@ -14,7 +14,7 @@ static bool saveRatingsToBinary(const QString &binPath, const KaggleRatings &rat
     }
 
     QDataStream out(&file);
-    out.setVersion(QDataStream::Qt_6_9);
+    out.setVersion(QDataStream::Qt_6_10);
 
     qint32 userCount = ratings.size();
     out << userCount;
@@ -45,7 +45,7 @@ static bool loadRatingsFromBinary(const QString &binPath, KaggleRatings &ratings
     }
 
     QDataStream in(&file);
-    in.setVersion(QDataStream::Qt_6_9);
+    in.setVersion(QDataStream::Qt_6_10);
 
     qint32 userCount = 0;
     in >> userCount;

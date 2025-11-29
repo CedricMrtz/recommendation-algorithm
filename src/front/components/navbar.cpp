@@ -23,9 +23,14 @@ navBar::navBar(UserManager *manager, KaggleRatings *ratings, QWidget *parent) : 
     auto *rateButton = new QPushButton(this);
     rateButton->setIcon(QIcon(":/front/public/rating.svg"));
 
+    auto *refreshButton = new QPushButton(this);
+    refreshButton->setIcon(QIcon(":/front/public/refresh.svg")); 
+ 
     layout->addWidget(profileButton);
     layout->addWidget(recommendButton);
     layout->addWidget(rateButton);
+    layout->addWidget(refreshButton);
+    
 
     setLayout(layout);
 
@@ -104,5 +109,17 @@ navBar::navBar(UserManager *manager, KaggleRatings *ratings, QWidget *parent) : 
         userManager->rateMovie(user, movie, rating);
 
         QMessageBox::information(this, "OK", "Calificación guardada.");
+    });
+    connect(refreshButton, &QPushButton::clicked, this, [=]() {
+        if (userManager->users.isEmpty()) {
+            QMessageBox::warning(this, "Error", "Primero registra un usuario.");
+            return;
+        }
+
+        QStringList userNames = userManager->users.keys();
+        QString user = QInputDialog::getItem(this, "Usuario", "Selecciona usuario para refrescar recomendaciones:", userNames, 0, false);
+        if (user.isEmpty()) return;
+
+        emit refreshRecommendationsRequested(user);
     });
 }

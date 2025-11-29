@@ -2,6 +2,7 @@
     <qresource prefix="/">
         <file>front/public/profile.svg</file>
         <file>front/public/search.svg</file>
+        <file>front/public/refresh.svg</file>
         <file>front/public/rating.svg</file>
         <file>front/data/anime.csv</file>
         <file>front/data/rating.csv</file>
