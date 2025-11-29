@@ -43,6 +43,7 @@ navBar::navBar(UserManager *manager, KaggleRatings *ratings, QWidget *parent) : 
 
         auto *screen = new recommendShow();
         QSet<QString> ratedMovies = userManager->ratedMovies(currentUser);
+        screen->sortRecommendations(allShows);
         screen->setRecommendations(allShows, ratedMovies);
         screen->show();
     });
