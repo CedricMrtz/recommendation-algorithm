@@ -19,7 +19,8 @@ public:
                            const QVector<Show> &shows,
                            QWidget *parent = nullptr);
 
-    void sortRecommendations(QVector<Show> &recs);
+    static void sortRecommendations(QVector<Show> &recs);
+
     void setRecommendations(const QVector<Show> &recs, const QSet<QString> &ratedMovies);
 
 private:

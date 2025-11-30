@@ -1,19 +1,25 @@
 #include "navbar.h"
 #include "csvutils.h"
+#include "crudutils.h"
 #include "recommendShow.h"
+#include "showCard.h"
+
 #include <QVector>
 #include <QStringList>
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QMap>
+#include <QSet>
 
-navBar::navBar(UserManager *manager, KaggleRatings *ratings, QWidget *parent) : QWidget(parent),
+navBar::navBar(UserManager *manager, KaggleRatings *ratings, QWidget *parent)
+    : QWidget(parent),
       userManager(manager),
       kaggleRatings(ratings)
 {
     setStyleSheet("background-color: #de2c2cff;");
 
     auto *layout = new QHBoxLayout(this);
+    grid = nullptr; // la rellena main.cpp
 
     auto *profileButton = new QPushButton(this);
     profileButton->setIcon(QIcon(":/front/public/profile.svg"));
@@ -23,37 +29,40 @@ navBar::navBar(UserManager *manager, KaggleRatings *ratings, QWidget *parent) : 
 
     auto *rateButton = new QPushButton(this);
     rateButton->setIcon(QIcon(":/front/public/rating.svg"));
- 
+
+    auto *crudButton = new QPushButton(this);
+    crudButton->setIcon(QIcon(":/front/public/edit.svg"));
+
     layout->addWidget(profileButton);
     layout->addWidget(recommendButton);
     layout->addWidget(rateButton);
-    
+    layout->addWidget(crudButton);
 
     setLayout(layout);
 
-connect(recommendButton, &QPushButton::clicked, this, [=]() {
-    if (userManager->users.isEmpty()) {
-        QMessageBox::warning(this, "Error", "Primero registra un usuario.");
-        return;
-    }
+    connect(recommendButton, &QPushButton::clicked, this, [=]() {
+        if (userManager->users.isEmpty()) {
+            QMessageBox::warning(this, "Error", "Primero registra un usuario.");
+            return;
+        }
 
-    QStringList userNames = userManager->users.keys();
-    QString currentUser = QInputDialog::getItem(
-        this,
-        "Usuario",
-        "Selecciona usuario:",
-        userNames,
-        0,
-        false
-    );
-    if (currentUser.isEmpty()) return;
+        QStringList userNames = userManager->users.keys();
+        QString currentUser = QInputDialog::getItem(
+            this,
+            "Usuario",
+            "Selecciona usuario:",
+            userNames,
+            0,
+            false
+        );
+        if (currentUser.isEmpty()) return;
 
-    QVector<Show> allShows = readShowsWithCache(":/front/data/anime.csv", "anime.bin");
+        QVector<Show> allShows = readShowsWithCache(":/front/data/anime.csv", "anime.bin");
 
-    auto *screen = new recommendShow(currentUser, userManager, kaggleRatings, allShows);
-    screen->setAttribute(Qt::WA_DeleteOnClose);
-    screen->showMaximized();   
-});
+        auto *screen = new recommendShow(currentUser, userManager, kaggleRatings, allShows);
+        screen->setAttribute(Qt::WA_DeleteOnClose);
+        screen->showMaximized();
+    });
 
     connect(profileButton, &QPushButton::clicked, this, [=]() {
         QString name = QInputDialog::getText(this, "Registrar usuario", "Nombre del usuario:");
@@ -65,10 +74,14 @@ connect(recommendButton, &QPushButton::clicked, this, [=]() {
             QMessageBox::information(this, "OK", "Usuario registrado.");
         }
     });
-
     connect(rateButton, &QPushButton::clicked, this, [=]() {
         if (userManager->users.isEmpty()) {
             QMessageBox::warning(this, "Error", "Primero registra un usuario.");
+            return;
+        }
+
+        if (movies.isEmpty()) {
+            QMessageBox::warning(this, "Error", "No hay películas cargadas en el catálogo.");
             return;
         }
 
@@ -76,13 +89,14 @@ connect(recommendButton, &QPushButton::clicked, this, [=]() {
         QString user = QInputDialog::getItem(this, "Usuario", "Selecciona usuario:", userNames, 0, false);
         if (user.isEmpty()) return;
 
-        QVector<Show> shows = readShowsWithCache(":/front/data/anime.csv", "anime.bin");
+        const QHash<QString, Show> &shows = movies;
 
         QStringList movieNames;
         QHash<QString, int> movieToId;
-        for (const auto &s : shows) {
+        for (auto it = shows.cbegin(); it != shows.cend(); ++it) {
+            const Show &s = it.value();
             movieNames << s.name;
-            movieToId[s.name] = s.anime_id;
+            movieToId.insert(s.name, s.anime_id);
         }
 
         QString movie = QInputDialog::getItem(this, "Película", "Selecciona película:", movieNames, 0, false);
@@ -102,6 +116,7 @@ connect(recommendButton, &QPushButton::clicked, this, [=]() {
                 }
             }
         }
+
         double localSum = 0.0;
         int localCount = 0;
         for (auto it = userManager->users.cbegin(); it != userManager->users.cend(); ++it) {
@@ -118,10 +133,62 @@ connect(recommendButton, &QPushButton::clicked, this, [=]() {
         int totalCount = kaggleCount + localCount + 1;
         double avg = totalCount ? (totalSum / totalCount) : 0.0;
 
-        QMessageBox::information(this, "Promedio", "Promedio actual (incluyendo tu calificación): " + QString::number(avg));
+        QMessageBox::information(
+            this,
+            "Promedio",
+            "Promedio actual (incluyendo tu calificación): " + QString::number(avg)
+        );
 
         userManager->rateMovie(user, movie, rating);
 
         QMessageBox::information(this, "OK", "Calificación guardada.");
     });
+
+    connect(crudButton, &QPushButton::clicked, this, [=]() {
+        if (userManager->users.isEmpty()) {
+            QMessageBox::warning(this, "Error", "Primero registra un usuario.");
+            return;
+        }
+
+        if (movies.isEmpty()) {
+            QMessageBox::warning(this, "Error", "No hay películas cargadas en el catálogo.");
+            return;
+        }
+
+        QStringList userNames = userManager->users.keys();
+        QString currentUser = QInputDialog::getItem(this, "Usuario", "Selecciona usuario:", userNames, 0, false);
+        if (currentUser.isEmpty()) return;
+
+        QSet<QString> ratedMovies = userManager->ratedMovies(currentUser);
+
+        auto *screen = new crudUtils(movies, ratedMovies, this);
+
+        connect(screen, &crudUtils::moviesUpdated, this, [=]() {
+            refreshDisplay(movies);
+        });
+
+        screen->exec();
+    });
+}
+
+void navBar::refreshDisplay(const QHash<QString, Show> &moviesHash) {
+    if (!grid) return;
+
+    QVector<Show> showsVec = moviesHash.values().toVector();
+    recommendShow::sortRecommendations(showsVec);
+
+    QLayoutItem *item;
+    while ((item = grid->takeAt(0)) != nullptr) {
+        if (auto *w = item->widget())
+            delete w;
+        delete item;
+    }
+
+    int row = 0, col = 0;
+    for (const Show &s : showsVec) {
+        ShowCard *card = new ShowCard(s);
+        grid->addWidget(card, row, col);
+        col++;
+        if (col == 3) { col = 0; row++; }
+    }
 }

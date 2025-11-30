@@ -30,13 +30,15 @@ QVector<Show> readShowsFromCsv(const QString &path) {
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
         qWarning() << "Failed to open file:" << path << "-" << file.errorString();
-        return {};
+        return shows;
     }
 
     QTextStream in(&file);
 
+    // skip header
     if (!in.atEnd())
         in.readLine();
+
     while (!in.atEnd()) {
         QString line = in.readLine().trimmed();
         if (line.isEmpty())
@@ -49,7 +51,7 @@ QVector<Show> readShowsFromCsv(const QString &path) {
         Show s;
         s.anime_id = f[0].toInt();
         s.name     = f[1];
-        s.genre    = f[2];  
+        s.genre    = f[2];
         s.type     = f[3];
         s.episodes = f[4].toInt();
         s.rating   = f[5].toDouble();
@@ -58,7 +60,7 @@ QVector<Show> readShowsFromCsv(const QString &path) {
         shows.append(s);
     }
 
-return shows;
+    return shows;
 }
 
 static bool saveShowsToBinary(const QString &binPath, const QVector<Show> &shows) {
@@ -69,7 +71,7 @@ static bool saveShowsToBinary(const QString &binPath, const QVector<Show> &shows
     }
 
     QDataStream out(&file);
-    out.setVersion(QDataStream::Qt_6_9); 
+    out.setVersion(QDataStream::Qt_6_9);
 
     qint32 count = shows.size();
     out << count;
@@ -121,7 +123,6 @@ static QVector<Show> readShowsFromBinary(const QString &binPath) {
     return shows;
 }
 
-
 QVector<Show> readShowsWithCache(const QString &csvPath, const QString &binPath) {
     QFileInfo binInfo(binPath);
 
@@ -143,4 +144,3 @@ QVector<Show> readShowsWithCache(const QString &csvPath, const QString &binPath)
 
     return shows;
 }
-
