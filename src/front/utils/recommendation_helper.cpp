@@ -10,10 +10,15 @@ QVector<Show> createRecommendations( const QString& appUserName,
         showsById.insert(s.anime_id, s);
     }
 
+    QHash<QString, int> nameToId;
+    for (const Show& s : shows) {
+        nameToId.insert(s.name, s.anime_id);
+    }
+
     QHash<QString, QHash<int, double>> engineRatings;
 
     for (auto it = kaggleRatings.constBegin(); it != kaggleRatings.constEnd(); ++it) {
-        int kaggleUserId = it.key(); 
+        int kaggleUserId = it.key();
         QString engineUserId = QStringLiteral("k_%1").arg(kaggleUserId);
 
         QHash<int, double> userMap;
@@ -30,13 +35,14 @@ QVector<Show> createRecommendations( const QString& appUserName,
 
     QHash<QString, int> appUserRatings = userManager.getUserRatings(appUserName);
     QHash<int, double> activeUserMap;
+
     for (auto it = appUserRatings.constBegin(); it != appUserRatings.constEnd(); ++it) {
-        const QString& movieKey = it.key();
+        const QString& movieName = it.key();
         int rating = it.value();
 
-        bool ok = false;
-        int animeId = movieKey.toInt(&ok);
-        if (!ok) {
+        int animeId = nameToId.value(movieName, -1);
+        if (animeId == -1) {
+            qDebug() << "No se encontró anime_id para película:" << movieName;
             continue;
         }
 

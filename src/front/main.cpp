@@ -6,6 +6,7 @@
 #include <QScrollArea>
 #include <QGridLayout>
 #include <QLabel>
+#include <QComboBox>
 
 #include "navbar.h"
 #include "showCard.h"
@@ -39,8 +40,26 @@ int main(int argc, char *argv[])
     QWidget *container = new QWidget();
     QVBoxLayout *containerLayout = new QVBoxLayout(container);
 
+
+    QHBoxLayout *recHeader = new QHBoxLayout();
+
     QLabel *recLabel = new QLabel("Recomendación", container);
-    recLabel->setStyleSheet("font-size: 24px; font-weight: bold; margin: 10px 0;");
+    recLabel->setStyleSheet("font-size: 24px; font-weight: bold;");
+
+    QComboBox *genreBox = new QComboBox(container);
+    genreBox->addItem("Todos");
+    genreBox->addItem("Action");
+    genreBox->addItem("Comedy");
+    genreBox->addItem("Romance");
+    genreBox->addItem("Drama");
+    genreBox->addItem("Slice of Life");
+    genreBox->addItem("Adventure");
+
+    recHeader->addWidget(recLabel);
+    recHeader->addStretch();
+    recHeader->addWidget(genreBox);
+
+    containerLayout->addLayout(recHeader);
 
     QWidget *recWidget = new QWidget(container);
     QGridLayout *recGrid = new QGridLayout(recWidget);
@@ -48,7 +67,6 @@ int main(int argc, char *argv[])
     recGrid->setVerticalSpacing(25);
     recGrid->setAlignment(Qt::AlignTop);
 
-    containerLayout->addWidget(recLabel);
     containerLayout->addWidget(recWidget);
 
     QLabel *catLabel = new QLabel("Catálogo", container);
@@ -67,48 +85,58 @@ int main(int argc, char *argv[])
     layout->addWidget(scroll);
 
     QString currentUser = "ruben";
+    auto refillRecommendations = [&](const QString &userName) {
+    clearGridLayout(recGrid);
 
-    auto refillGridsForUser = [&](const QString &userName) {
-        clearGridLayout(recGrid);
+    QVector<Show> recommended = createRecommendations(
+        userName,
+        manager,
+        kaggleRatings,
+        shows
+    );
+
+    QString selectedGenre = genreBox->currentText();
+    int row = 0, col = 0;
+
+    qDebug() << "Mostrando recomendaciones para usuario" << userName
+             << "con género filtrado:" << selectedGenre;
+
+    for (const Show &s : recommended) {
+        if (selectedGenre != "Todos" &&
+            !s.genre.contains(selectedGenre, Qt::CaseInsensitive))
+            continue;
+
+        qDebug() << "Shows :" << s.anime_id << ", " << s.name << ", generos:" << s.genre;
+
+        ShowCard *card = new ShowCard(s);
+        recGrid->addWidget(card, row, col);
+        if (++col == 3) { col = 0; row++; }
+    }
+};
+
+    auto refillCatalog = [&]() {
         clearGridLayout(catGrid);
 
-        QVector<Show> recommended = createRecommendations(
-            userName,
-            manager,
-            kaggleRatings,
-            shows
-        );
-
-        int row = 0;
-        int col = 0;
-        for (int i = 0; i < recommended.size(); ++i) {
-            ShowCard *card = new ShowCard(recommended[i]);
-            recGrid->addWidget(card, row, col);
-            col++;
-            if (col == 3) {
-                col = 0;
-                row++;
-            }
-        }
-        row = 0;
-        col = 0;
-        for (int i = 0; i < shows.size(); ++i) {
-            ShowCard *card = new ShowCard(shows[i]);
+        int row = 0, col = 0;
+        for (const Show &s : shows) {
+            ShowCard *card = new ShowCard(s);
             catGrid->addWidget(card, row, col);
-            col++;
-            if (col == 3) {
-                col = 0;
-                row++;
-            }
+            if (++col == 3) { col = 0; row++; }
         }
     };
+    refillCatalog();
+    refillRecommendations(currentUser);
 
-    refillGridsForUser(currentUser);
+    QObject::connect(genreBox, &QComboBox::currentTextChanged,
+                     [&](const QString &) {
+        refillRecommendations(currentUser);
+    });
+
 
     QObject::connect(navbar, &navBar::refreshRecommendationsRequested,
-                     &window, [&](const QString &userName) {
-        currentUser = userName;
-        refillGridsForUser(userName);
+        &window, [&](const QString &userName) {
+            currentUser = userName;
+            refillRecommendations(userName);   
     });
 
     window.showMaximized();

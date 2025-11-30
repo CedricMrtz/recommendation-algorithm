@@ -4,6 +4,7 @@
 #include <QVector>
 #include <QString>
 #include "show.h"
+#include <QDebug>
 
 class RecommendationEngine {
 public:

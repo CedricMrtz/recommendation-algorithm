@@ -26,7 +26,10 @@ public:
     QHash<QString, User> users;
 
 private:
-    void loadUsers();
-    void loadUserRatings();
-    void rewriteUserRatingsFile();
+    QString m_usersBinPath;
+    QString m_ratingsBinPath;
+
+    void loadUsersAndRatings();
+    void saveUsersToBinary() const;
+    void saveRatingsToBinary() const;
 };

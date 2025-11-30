@@ -2,6 +2,7 @@
 
 #include <QtMath>
 #include <algorithm>
+#include <QDebug>
 
 RecommendationEngine::RecommendationEngine(
     const QHash<QString, QHash<int, double>>& userRatings,
@@ -117,6 +118,16 @@ QVector<Show> RecommendationEngine::recommendForUser(const QString& userId) cons
 
     if (candidates.size() > m_maxResults)
         candidates.resize(m_maxResults);
+
+    qDebug() << " Recomendaciones para usuario:" << userId;
+    for (const Candidate &c : candidates) {
+        auto itShow = m_showsById.find(c.animeId);
+        QString title = (itShow != m_showsById.end()) ? itShow->name : QStringLiteral("UNKNOWN");
+        qDebug() << "AnimeID:" << c.animeId
+                 << "| score (\"probabilidad\"):" << c.score
+                 << "| title:" << title;
+    }
+    qDebug() << " Fin recomendaciones para usuario:" << userId;
 
     QVector<Show> result;
     result.reserve(candidates.size());

@@ -2,108 +2,151 @@
 #include <QFile>
 #include <QTextStream>
 #include <QDebug>
+#include <QDataStream>
 
-UserManager::UserManager() {
-    loadUsers();
-    loadUserRatings();
+UserManager::UserManager()
+    : m_usersBinPath("users.bin"),
+      m_ratingsBinPath("user_ratings.bin")
+{
+    loadUsersAndRatings();
 }
 
-bool UserManager::registerUser(const QString& name) {
+void UserManager::loadUsersAndRatings()
+{
+    users.clear();
+
+    // 1) Cargar usuarios
+    {
+        QFile file(m_usersBinPath);
+        if (file.open(QIODevice::ReadOnly)) {
+            QDataStream in(&file);
+            in.setVersion(QDataStream::Qt_6_10);
+
+            qint32 userCount = 0;
+            in >> userCount;
+
+            for (qint32 i = 0; i < userCount; ++i) {
+                QString username;
+                in >> username;
+                users[username] = User{username};
+            }
+        } else {
+            qDebug() << "No se pudo abrir" << m_usersBinPath << "para leer (iniciando sin usuarios)";
+        }
+    }
+
+    // 2) Cargar ratings
+    {
+        QFile file(m_ratingsBinPath);
+        if (file.open(QIODevice::ReadOnly)) {
+            QDataStream in(&file);
+            in.setVersion(QDataStream::Qt_6_10);
+
+            qint32 userCount = 0;
+            in >> userCount;
+
+            for (qint32 i = 0; i < userCount; ++i) {
+                QString username;
+                in >> username;
+
+                qint32 ratingCount = 0;
+                in >> ratingCount;
+
+                if (!users.contains(username)) {
+                    users[username] = User{username};
+                }
+
+                User &u = users[username];
+                for (qint32 j = 0; j < ratingCount; ++j) {
+                    QString movie;
+                    qint32 rating;
+                    in >> movie >> rating;
+                    u.ratings[movie] = rating;
+                }
+            }
+        } else {
+            qDebug() << "No se pudo abrir" << m_ratingsBinPath << "para leer (iniciando sin ratings)";
+        }
+    }
+}
+
+void UserManager::saveUsersToBinary() const
+{
+    QFile file(m_usersBinPath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        qWarning() << "No se pudo abrir" << m_usersBinPath << "para escribir:"
+                   << file.errorString();
+        return;
+    }
+
+    QDataStream out(&file);
+    out.setVersion(QDataStream::Qt_6_10);
+
+    qint32 userCount = users.size();
+    out << userCount;
+
+    for (auto it = users.constBegin(); it != users.constEnd(); ++it) {
+        const QString &username = it.key();
+        out << username;
+    }
+}
+
+void UserManager::saveRatingsToBinary() const
+{
+    QFile file(m_ratingsBinPath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        qWarning() << "No se pudo abrir" << m_ratingsBinPath << "para escribir:"
+                   << file.errorString();
+        return;
+    }
+
+    QDataStream out(&file);
+    out.setVersion(QDataStream::Qt_6_10);
+
+    qint32 userCount = users.size();
+    out << userCount;
+
+    for (auto it = users.constBegin(); it != users.constEnd(); ++it) {
+        const QString &username = it.key();
+        const User &u = it.value();
+
+        out << username;
+
+        qint32 ratingCount = u.ratings.size();
+        out << ratingCount;
+
+        for (auto rit = u.ratings.constBegin(); rit != u.ratings.constEnd(); ++rit) {
+            const QString &movie = rit.key();
+            qint32 rating = rit.value();
+            out << movie << rating;
+        }
+    }
+}
+
+bool UserManager::registerUser(const QString& name)
+{
     if (users.contains(name))
         return false;
 
     users[name] = User{name};
 
-    QFile file(":/front/data/users.csv");
-    if (file.open(QIODevice::Append | QIODevice::Text)) {
-        QTextStream out(&file);
-        out << name << "\n";
-    } else {
-        qWarning() << "Could not open users.csv for append:" << file.errorString();
-    }
+    saveUsersToBinary();
+    saveRatingsToBinary();
 
     return true;
 }
 
-bool UserManager::rateMovie(const QString& user, const QString& movie, int rating) {
+bool UserManager::rateMovie(const QString& user, const QString& movie, int rating)
+{
     if (!users.contains(user))
         return false;
 
-    bool existed = users[user].ratings.contains(movie);
     users[user].ratings[movie] = rating;
 
-    if (!existed) {
-        QFile file(":/front/data/user_ratings.csv");
-        if (file.open(QIODevice::Append | QIODevice::Text)) {
-            QTextStream out(&file);
-            out << user << "," << movie << "," << rating << "\n";
-        } else {
-            qWarning() << "No se pudo abrir user_ratings.csv (añadir):" << file.errorString();
-        }
-    } else {
-        rewriteUserRatingsFile();
-    }
+    saveUsersToBinary();
+    saveRatingsToBinary();
 
     return true;
-}
-
-void UserManager::loadUsers() {
-    QFile file(":/front/data/users.csv");
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-        return;
-
-    QTextStream in(&file);
-    while (!in.atEnd()) {
-        QString name = in.readLine().trimmed();
-        if (!name.isEmpty()) {
-            users[name] = User{name};
-        }
-    }
-}
-
-void UserManager::loadUserRatings() {
-    QFile file(":/front/data/user_ratings.csv");
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-        return;
-
-    QTextStream in(&file);
-    while (!in.atEnd()) {
-        QString line = in.readLine().trimmed();
-        if (line.isEmpty()) continue;
-
-        auto parts = line.split(",");
-        if (parts.size() != 3) continue;
-
-        QString username = parts[0];
-        QString movie    = parts[1];
-        int rating       = parts[2].toInt();
-
-        if (!users.contains(username)) {
-            users[username] = User{username};
-        }
-        users[username].ratings[movie] = rating;
-    }
-}
-
-void UserManager::rewriteUserRatingsFile() {
-    QFile file(":/front/data/user_ratings.csv");
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
-        qWarning() << "No se pudeo abrir user_ratings.csv: (cambiar)" << file.errorString();
-        return;
-    }
-
-    QTextStream out(&file);
-
-    for (auto it = users.cbegin(); it != users.cend(); ++it) {
-        const QString &username = it.key();
-        const User &u = it.value();
-
-        for (auto it2 = u.ratings.cbegin(); it2 != u.ratings.cend(); ++it2) {
-            const QString &movie = it2.key();
-            int rating = it2.value();
-            out << username << "," << movie << "," << rating << "\n";
-        }
-    }
 }
 
 QHash<QString, int> UserManager::getUserRatings(const QString& user) const
