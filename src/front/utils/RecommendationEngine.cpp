@@ -124,8 +124,8 @@ QVector<Show> RecommendationEngine::recommendForUser(const QString& userId) cons
         auto itShow = m_showsById.find(c.animeId);
         QString title = (itShow != m_showsById.end()) ? itShow->name : QStringLiteral("UNKNOWN");
         qDebug() << "AnimeID:" << c.animeId
-                 << "| score (\"probabilidad\"):" << c.score
-                 << "| title:" << title;
+                 << ", score:" << c.score
+                 << ", title:" << title;
     }
     qDebug() << " Fin recomendaciones para usuario:" << userId;
 

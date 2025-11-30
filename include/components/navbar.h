@@ -16,7 +16,4 @@ public:
     UserManager *userManager;
     KaggleRatings *kaggleRatings;
 
-signals:
-    void refreshRecommendationsRequested(const QString &userName);
-
 };
