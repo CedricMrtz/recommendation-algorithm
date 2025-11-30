@@ -1,4 +1,4 @@
-@startuml cosas
+@startuml recommendationAlgorithm_Qt6
 ' Class diagram for recommendation-algorithm (headers in include/)
 
 skinparam classAttributeIconSize 0
