@@ -1,0 +1,98 @@
+@startuml cosas
+' Class diagram for recommendation-algorithm (headers in include/)
+
+skinparam classAttributeIconSize 0
+
+class User {
+  +QString name
+  +QHash<QString,int> ratings
+}
+
+class Show {
+  +int anime_id
+  +QString name
+  +QString genre
+  +QString type
+  +int episodes
+  +double rating
+  +int members
+}
+
+class UserManager {
+  +UserManager()
+  +bool registerUser(const QString &name)
+  +bool rateMovie(const QString &user, const QString &movie, int rating)
+  +QSet<QString> ratedMovies(const QString &username) const
+  +QHash<QString, User> users
+  -QString m_usersBinPath
+  -QString m_ratingsBinPath
+  -void loadUsersAndRatings()
+  -void saveUsersToBinary() const
+  -void saveRatingsToBinary() const
+}
+
+class RecommendationEngine {
+  +RecommendationEngine(userRatings, showsById, maxNeighbors = 10, maxResults = 10)
+  +QVector<Show> recommendForUser(userId : QString) const
+  -double cosineSimilarity(userA : QString, userB : QString) const
+  -m_userRatings : QHash<QString, QHash<int, double>>
+  -m_showsById   : QHash<int, Show>
+  -m_maxNeighbors : int
+  -m_maxResults   : int
+}
+
+class navBar {
+  +navBar(UserManager *manager, KaggleRatings *kaggleRatings, QWidget *parent = nullptr)
+  +void refreshDisplay(const QHash<QString, Show> &movies)
+  +QHash<QString, Show> movies
+  -QGridLayout *grid
+  -UserManager *userManager
+  -KaggleRatings *kaggleRatings
+}
+
+class recommendShow {
+  +recommendShow(const QString &userName, UserManager *userManager, KaggleRatings *kaggleRatings, const QVector<Show> &shows, QWidget *parent = nullptr)
+  +static void sortRecommendations(QVector<Show> &recs)
+  +void setRecommendations(const QVector<Show> &recs, const QSet<QString> &ratedMovies)
+  -QString m_userName
+  -UserManager *m_userManager
+  -KaggleRatings *m_kaggleRatings
+  -QVector<Show> m_shows
+  -QGridLayout *grid
+  -QComboBox *genreBox
+  -void refillRecommendations()
+}
+
+class crudUtils {
+  +crudUtils(QHash<QString, Show> &movies, QSet<QString> &ratedMovies, QWidget *parent = nullptr)
+  +signal moviesUpdated()
+  -QHash<QString, Show> &movies
+  -QSet<QString> &ratedMovies
+  -void deleteMovie()
+  -void addMovie()
+  -void updateMovie()
+  -bool showMovieDialog(Show &show, bool isUpdate)
+}
+
+class ShowCard {
+  +ShowCard(const Show &show, QWidget *parent = nullptr)
+}
+
+note "KaggleRatings = QHash<UserId, QHash<AnimeId, RatingValue>>\nfunction: loadKaggleRatingsWithCache(...)" as N_ratingutils
+
+' Associations / usages
+UserManager "1" o-- "*" User : manages
+navBar --> UserManager : uses
+navBar --> N_ratingutils : uses
+recommendShow --> UserManager : uses
+recommendShow --> N_ratingutils : uses
+recommendation_helper ..> RecommendationEngine : creates/uses
+RecommendationEngine --> Show : uses (m_showsById)
+crudUtils ..> Show : manipulates
+ShowCard ..> Show : displays
+csvutils ..> Show : creates Show list from CSV
+recommendation_helper ..> Show : reads list of shows
+recommendation_helper ..> KaggleRatings : reads ratings
+recommendShow --> "QVector<Show>" : holds
+
+@enduml
