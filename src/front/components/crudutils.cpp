@@ -88,6 +88,28 @@ bool crudUtils::showMovieDialog(Show &movie, bool isUpdate) {
 }
 
 void crudUtils::deleteMovie() {
+    QString name = QInputDialog::getText(this, "Delete Movie", "Enter Anime name:");
+
+    if (name.isEmpty())
+        return;
+
+    // Search by name, not key
+    QString keyToRemove;
+    for (auto it = movies.begin(); it != movies.end(); ++it) {
+        if (it.value().name.compare(name, Qt::CaseInsensitive) == 0) {
+            keyToRemove = it.key();
+            break;
+        }
+    }
+
+    if (keyToRemove.isEmpty()) {
+        QMessageBox::warning(this, "Error", "Movie not found");
+        return;
+    }
+
+    movies.remove(keyToRemove);
+
+    QMessageBox::information(this, "Success", "Movie deleted!");
     emit moviesUpdated();
 }
 
@@ -113,19 +135,30 @@ void crudUtils::addMovie() {
 void crudUtils::updateMovie() {
     QString name = QInputDialog::getText(this, "Update Movie", "Enter Anime name:");
 
-    if (!movies.contains(name)) {
+    if (name.isEmpty())
+        return;
+
+    // Find key by matching movie.name
+    QString keyToEdit;
+    for (auto it = movies.begin(); it != movies.end(); ++it) {
+        if (it.value().name.compare(name, Qt::CaseInsensitive) == 0) {
+            keyToEdit = it.key();
+            break;
+        }
+    }
+
+    if (keyToEdit.isEmpty()) {
         QMessageBox::warning(this, "Error", "Movie not found");
         return;
     }
 
-    Show updated = movies[name];
+    Show updated = movies[keyToEdit];
 
     if (!showMovieDialog(updated, true))
         return;
 
-    movies[name] = updated;
+    movies[keyToEdit] = updated;
 
     QMessageBox::information(this, "Success", "Movie updated!");
-
     emit moviesUpdated();
 }
