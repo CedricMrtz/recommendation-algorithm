@@ -107,6 +107,15 @@ void crudUtils::deleteMovie() {
         return;
     }
 
+    if (ratedMovies.contains(keyToRemove)) {
+        QMessageBox::warning(
+            this,
+            "Acción no permitida",
+            "No puedes eliminar este show porque tiene calificaciones asignadas."
+        );
+        return;
+    }
+
     movies.remove(keyToRemove);
 
     QMessageBox::information(this, "Success", "Movie deleted!");
