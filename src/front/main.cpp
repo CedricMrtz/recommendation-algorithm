@@ -20,6 +20,7 @@ int main(int argc, char *argv[])
     KaggleRatings kaggleRatings;
     loadKaggleRatingsWithCache(":/front/data/rating.csv", "ratings.bin", kaggleRatings);
 
+    
     QWidget window;
     window.setWindowTitle("Recommend");
     QVBoxLayout *layout = new QVBoxLayout(&window);
@@ -32,14 +33,17 @@ int main(int argc, char *argv[])
     scroll->setWidgetResizable(true);
     QWidget *container = new QWidget();
     QGridLayout *grid = new QGridLayout(container);
+
+    navbar->grid = grid;
+
     grid->setHorizontalSpacing(20);
     grid->setVerticalSpacing(25);
     grid->setAlignment(Qt::AlignTop);
     scroll->setWidget(container);
     layout->addWidget(scroll);
 
-    QHash<QString, Show> shows = readShowsFromCsv(":/front/data/anime.csv");
-    QVector<Show> showsVec = shows.values();
+    navbar->movies = readShowsFromCsv(":/front/data/anime.csv");
+    QVector<Show> showsVec = navbar->movies.values();
     int row = 0;
     int col = 0;
     recommendShow::sortRecommendations(showsVec);

@@ -8,6 +8,7 @@
 #include <QMap>
 #include <QHash>
 #include <QString>
+#include <showCard.h>
 
 navBar::navBar(UserManager *manager, KaggleRatings *ratings, QWidget *parent) : QWidget(parent),
       userManager(manager),
@@ -16,6 +17,7 @@ navBar::navBar(UserManager *manager, KaggleRatings *ratings, QWidget *parent) : 
     setStyleSheet("background-color: #de2c2cff;");
 
     auto *layout = new QHBoxLayout(this);
+    grid = nullptr;
 
     auto *profileButton = new QPushButton(this);
     profileButton->setIcon(QIcon(":/front/public/profile.svg"));
@@ -136,11 +138,35 @@ navBar::navBar(UserManager *manager, KaggleRatings *ratings, QWidget *parent) : 
         if (currentUser.isEmpty()) return;
 
         QHash<QString, Show> allShows = readShowsFromCsv(":/front/data/anime.csv");
-
-        auto *screen = new crudUtils(this);
-
         QSet<QString> ratedMovies = userManager->ratedMovies(currentUser);
+
+        auto *screen = new crudUtils(movies, ratedMovies, this);
+
+        connect(screen, &crudUtils::moviesUpdated, this, [=]() {
+        refreshDisplay(movies);
+        });
 
         screen->exec();
     });
 }
+
+void navBar::refreshDisplay(const QHash<QString, Show> &movies) {
+    QVector<Show> showsVec = movies.values().toVector();
+    recommendShow::sortRecommendations(showsVec);
+
+    // Remove old cards
+    QLayoutItem *item;
+    while ((item = grid->takeAt(0)) != nullptr) {
+        delete item->widget();
+        delete item;
+    }
+
+    int row = 0, col = 0;
+    for (const Show &s : showsVec) {
+        ShowCard *card = new ShowCard(s);
+        grid->addWidget(card, row, col);
+        col++;
+        if (col == 3) { col = 0; row++; }
+    }
+}
+

@@ -2,6 +2,7 @@
 #include <QWidget>
 #include <QHBoxLayout>
 #include <QPushButton>
+#include <QGridLayout>
 #include "userManager.h"
 #include "ratingutils.h" 
 #include "recommendation.h"
@@ -13,6 +14,9 @@ public:
     explicit navBar(UserManager *manager,
                     KaggleRatings *kaggleRatings,
                     QWidget *parent = nullptr);
+    void refreshDisplay(const QHash<QString, Show> &movies);
+    QHash<QString, Show> movies;
+    QGridLayout *grid;
 
 private:
     UserManager *userManager;

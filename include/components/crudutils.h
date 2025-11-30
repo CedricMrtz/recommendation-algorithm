@@ -10,9 +10,15 @@
 class crudUtils : public QDialog {
     Q_OBJECT
 public:
-    explicit crudUtils(QWidget *parent = nullptr);
+    explicit crudUtils(QHash<QString, Show> &movies, QSet<QString> &ratedMovies, QWidget *parent = nullptr);
+signals:
+    void moviesUpdated();
+private:
+    QHash<QString, Show> &movies;
+    QSet<QString> &ratedMovies;
 
-    void deleteMovie(QHash<QString, Show> &movies, QSet<QString> &ratedMovies);
-    void addMovie(QHash<QString, Show> &movies);
-    void updateMovie(QHash<QString, Show> &movies);
+    void deleteMovie();
+    void addMovie();
+    void updateMovie();
+    bool showMovieDialog(Show &show, bool isUpdate);
 };
