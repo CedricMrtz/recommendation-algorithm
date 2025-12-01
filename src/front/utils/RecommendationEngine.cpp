@@ -1,8 +1,30 @@
 #include "RecommendationEngine.h"
-
 #include <QtMath>
-#include <algorithm>
 #include <QDebug>
+#include "candidate.h"
+#include "recommendShow.h"
+
+int partition(QVector<Candidate> &arr, int low, int high) {
+    double pivot = arr[high].score;
+    int i = low - 1;
+
+    for (int j = low; j < high; j++) {
+        if (arr[j].score > pivot) {
+            i++;
+            std::swap(arr[i], arr[j]);
+        }
+    }
+    std::swap(arr[i + 1], arr[high]);
+    return i + 1;
+}
+
+void quickSort(QVector<Candidate> &rec, int low, int high) {
+    if (low < high) {
+        int pi = partition(rec, low, high);
+        quickSort(rec, low, pi - 1);
+        quickSort(rec, pi + 1, high);
+    }
+}
 
 RecommendationEngine::RecommendationEngine(
     const QHash<QString, QHash<int, double>>& userRatings,
@@ -67,12 +89,7 @@ QVector<Show> RecommendationEngine::recommendForUser(const QString& userId) cons
         if (sim > 0.0)
             neighbors.push_back({ otherUser, sim });
     }
-
-    std::sort(neighbors.begin(), neighbors.end(),
-              [](const Neighbor& a, const Neighbor& b) {
-                  return a.similarity > b.similarity;
-              });
-
+    
     if (neighbors.size() > m_maxNeighbors)
         neighbors.resize(m_maxNeighbors);
 
@@ -93,11 +110,6 @@ QVector<Show> RecommendationEngine::recommendForUser(const QString& userId) cons
         }
     }
 
-    struct Candidate {
-        int animeId;
-        double score;
-    };
-
     QVector<Candidate> candidates;
     candidates.reserve(numerators.size());
 
@@ -111,10 +123,7 @@ QVector<Show> RecommendationEngine::recommendForUser(const QString& userId) cons
         candidates.push_back({ animeId, num / denom });
     }
 
-    std::sort(candidates.begin(), candidates.end(),
-              [](const Candidate& a, const Candidate& b) {
-                  return a.score > b.score;
-              });
+    quickSort(candidates, 0, candidates.size()-1);
 
     if (candidates.size() > m_maxResults)
         candidates.resize(m_maxResults);
